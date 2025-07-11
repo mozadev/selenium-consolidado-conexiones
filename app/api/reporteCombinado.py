@@ -26,11 +26,11 @@ def generar_reporte_combinado_endpoint(request: FechaReporteCombinadoRequest):
         media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
 
-
-
 # @router.get("/combinado")
 # def generate():
 #     return {'hola': 'reporteCombinado'}
+
+
 
 
 

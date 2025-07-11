@@ -42,6 +42,7 @@ def save_from_Sync_Desktop_Excel():
        try:
            logger.info("Tratando de guardar conectar con Excel Aplication")
            workbook.SaveAs(ruta_guardado)
+           logger.info(f"Archivo guardado en:{ruta_guardado}")
            print(f"Archivo guardado en: {ruta_guardado}")
            
            #workbook.Close(SaveChanges=False)
@@ -64,9 +65,12 @@ def get_info_from_Excel_Saved():
 
 
     excel_data = pd.ExcelFile(sharepointHorarioGeneral_path)
+    print(excel_data.sheet_names)
     #hojas_seleccionadas = ['25 nov - 01 dic', '02 dic - 08 dic ', '09 dic - 15 dic ', '16 dic - 22 dic  ', '23 dic - 29 dic  ','30 dic - 05  En'] 
-    hojas_seleccionadas = ['06 Ene - 12 Ene'] 
-    datos_extraidos = []
+    #hojas_seleccionadas = ['30 dic - 05  En','06 Ene - 12 Ene', '13 Ene - 19 Ene', '20 Ene - 26 Ene ','27 Ene - 02 Feb'] 
+    #hojas_seleccionadas = ['27 Ene - 02 Feb', '03 Feb - 09 Feb ', '10 Feb - 16 Feb', '17 Feb - 23 Feb', '24 Feb - 02 Mar'] 
+    hojas_seleccionadas = ['31 Mar -  6 Abril ', '07 Abril -  13 Abril  ','14 Abril - 20 Abril', '21 Abril - 27 Abril', '28 Abril - 04 Mayo']  
+    datos_extraidos = []    
 
     for hoja in hojas_seleccionadas:
         sharepoint_df = pd.read_excel(excel_data, sheet_name=hoja, header=None)

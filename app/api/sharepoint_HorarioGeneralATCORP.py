@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi.responses import FileResponse
 from app.modules.web_bots.sharepoint.service import SharepointService
-from app.modules.web_bots.sharepoint.scripts.horario_General_ATCORP import (
+from app.modules.web_bots.sharepoint.scripts.horario_general_atcorp import (
     guardar_excel_como
 )
 
@@ -16,10 +16,6 @@ def descarga_reporte():
         filename=ruta_archivo.split("/")[-1],
         media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
-
-
-
-
 
 
 

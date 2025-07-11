@@ -14,7 +14,6 @@ class FechaSecuenciaRequest(BaseModel):
             }
         }
 
-
     @field_validator("fecha_fin")
     def validar_rango_fecha(cls,fecha_fin, info : ValidationInfo):
         fecha_inicio = info.data.get("fecha_inicio")

@@ -260,6 +260,19 @@ def guardando_excel(fecha_procesada):
         logger.info(f"Error al guardar reporte del clipboard al excel: {e}")
         return {"status": "error", "message": str(e)}
 
+def add_columns_cumplimiento_sla_tickets_cerrados_SEP_ATCORP_SLA(excel_path):
+    try:
+        logger.info("Tratando de agregar columnas SLA - SGA ")
+        df = pd.read_excel()
+
+
+
+
+    except Exception as e:
+        logger.info(f"Error al agregar columnas cumplimiento sla tickets cerrados SEP ATCORP SLA")
+        return {"status": "error", "message": str(e)}
+
+
 async def send_excel_to_api(excel_path):
 
     try:

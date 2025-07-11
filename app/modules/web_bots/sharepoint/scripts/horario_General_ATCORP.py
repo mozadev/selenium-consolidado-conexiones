@@ -27,9 +27,9 @@ def guardar_excel_como():
     workbook = None
 
     for wb in excel.Workbooks:
-            if wb.Name == nombre_archivo:
-                workbook = wb
-                break   
+        if wb.Name == nombre_archivo:
+            workbook = wb
+            break   
 
     #workbook = excel.ActiveWorkbook
     if not workbook:
@@ -50,6 +50,7 @@ def guardar_excel_como():
     try:
         logger.info("Tratando de guardar conectar con Excel Aplication")
         workbook.SaveAs(ruta_guardado)
+        logger.info(f"Archivo guardado en:{ruta_guardado}")
         print(f"Archivo guardado en: {ruta_guardado}")
         
         #workbook.Close(SaveChanges=False)
@@ -65,41 +66,45 @@ def guardar_excel_como():
         pass
 
 def get_info_from_Exel_saved_to_dataframe():
-
     sharepointHorarioGeneral_path = guardar_excel_como()
     if not sharepointHorarioGeneral_path:
         raise ValueError("Error: `sharepointHorarioGeneral_path` es None. No se pudo descargar el reporte de sharepoint.")
     
-    excel_data = pd.ExcelFile(sharepointHorarioGeneral_path)
-    #hojas_seleccionadas = ['25-11 al 01-12', '02-12 al 08-12', '09-12 al 15-12', '16-12 al 22-12', '23-12 al 29-12', '30-12 al 05-01-25']
-    hojas_seleccionadas = ['06-01 al 12-01']
-    datos_extraidos = []
-
-    for hoja in hojas_seleccionadas:
-        sharepoint_df = pd.read_excel(excel_data, sheet_name=hoja, header=None)
-        fila_referencia = 0
-        fila_inicio = sharepoint_df[0].first_valid_index()
-        for i in range(fila_inicio, len(sharepoint_df)):
-            if pd.isnull(sharepoint_df.iloc[i,0]):
-                fila_referencia = i + 2
-                break
-
-        encabezados_dias = sharepoint_df.iloc[0,2:].dropna().tolist()
-
-        for i, row  in sharepoint_df.iterrows():
-            if i >=fila_referencia and pd.notnull(row[1]):
-                nombre= row[1]  
-                if nombre not in ["Turno", "Personal FO/BO"]:
-                    for idx, encabezado in enumerate(encabezados_dias):
-                        turno_col= 2 + idx * 3
-                        turno = row[turno_col]
-                        if pd.notnull(turno):
-                            datos_extraidos.append({
-                                'Fecha_General': encabezado,
-                                'Usuario_General': nombre,
-                                'Turno_General': turno,
-                            })
-
+    try:
+        logger.info("Tratando de obtener info from Excel guardado")
+        excel_data = pd.ExcelFile(sharepointHorarioGeneral_path)
+        print(excel_data.sheet_names)
+        #hojas_seleccionadas = ['27-01 al 02-02', '03-02 al 09-02', '10-02 al 16-02', '24-02 al 02-03',  '17-02 al 23-02']
+        #hojas_seleccionadas = ['24-02 al 02-03', '03-03 al 09-03', '10-03 al 16-03', '17-03 al 23-03',  '24-03 al 30-03', '31-03 al 06-04']
+        hojas_seleccionadas = ['31-03 al 06-04', '07-04 al 13-04', '14-04 al 20-04', '21-04 al 27-04', '28-04 al 04-05']
+        datos_extraidos = []
+        
+        for hoja in hojas_seleccionadas:
+            sharepoint_df = pd.read_excel(excel_data, sheet_name=hoja, header=None)
+            fila_referencia = 0
+            fila_inicio = sharepoint_df[0].first_valid_index()
+            for i in range(fila_inicio, len(sharepoint_df)):
+                if pd.isnull(sharepoint_df.iloc[i,0]):
+                    fila_referencia = i + 2
+                    break
+            encabezados_dias = sharepoint_df.iloc[0,2:].dropna().tolist()
+            for i, row  in sharepoint_df.iterrows():
+                if i >=fila_referencia and pd.notnull(row[1]):
+                    nombre= row[1]  
+                    if nombre not in ["Turno de Emergencia", "Turno", "Personal FO/BO"]:
+                        for idx, encabezado in enumerate(encabezados_dias):
+                            turno_col= 2 + idx * 3
+                            turno = row[turno_col]
+                            if pd.notnull(turno):
+                                datos_extraidos.append({
+                                    'Fecha_General': encabezado,
+                                    'Usuario_General': nombre,
+                                    'Turno_General': turno,
+                                })
+    except Exception as e:
+        logger.error(f"Error tratando de obtener horarios desde archivo excel guardado: {e}")
+        print(f"Error tratando de obtener horarios desde archivo excel guardado: {e}")
+        return None   
     # Extraer la hora inicial de 'Turno_General'
     sharepoint_horario_General_ATCORP_df = pd.DataFrame(datos_extraidos)
 
@@ -178,33 +183,33 @@ def save_info_obtained(df):
 
 
 
-def descargarReporteSelenium(self):
-    try:
-        driver = None
-        if not SHAREPOINT_USER or not SHAREPOINT_PASSWORD:
-            logger.error("Sharepoint credenciales no encontradas .env file")
-            return
-        download_path = os.path.abspath("media/sharepoint/")
+# def descargarReporteSelenium(self):
+#     try:
+#         driver = None
+#         if not SHAREPOINT_USER or not SHAREPOINT_PASSWORD:
+#             logger.error("Sharepoint credenciales no encontradas .env file")
+#             return
+#         download_path = os.path.abspath("media/sharepoint/")
    
-        if not os.path.exists(download_path):
-            os.makedirs(download_path)
-        try:
-            logger.info('Empezando scraping de Sharepoint')
-            driver = setup_chrome_driver(download_directory=download_path)
-            result = scrape_sharepoint_page(driver, SHAREPOINT_USER, SHAREPOINT_PASSWORD)
-            return result
-        except Exception as e:
-            logger.error(f"Error en scraping de Sharepoint: {str(e)}")
-            return None
-        finally:
-            if driver:
-                #driver.quit()
-                logger.info("SHAREPOINT CERRADO")
-    except Exception as e:
-       error_message = f" Error al descargar reporte: {str(e)}"
-       logger.error(error_message)
-       raise HTTPException(
-            status_code=500,
-             detail=error_message
-       )
+#         if not os.path.exists(download_path):
+#             os.makedirs(download_path)
+#         try:
+#             logger.info('Empezando scraping de Sharepoint')
+#             driver = setup_chrome_driver(download_directory=download_path)
+#             result = scrape_sharepoint_page(driver, SHAREPOINT_USER, SHAREPOINT_PASSWORD)
+#             return result
+#         except Exception as e:
+#             logger.error(f"Error en scraping de Sharepoint: {str(e)}")
+#             return None
+#         finally:
+#             if driver:
+#                 #driver.quit()
+#                 logger.info("SHAREPOINT CERRADO")
+#     except Exception as e:
+#        error_message = f" Error al descargar reporte: {str(e)}"
+#        logger.error(error_message)
+#        raise HTTPException(
+#             status_code=500,
+#              detail=error_message
+#        )
 

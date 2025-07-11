@@ -9,7 +9,7 @@ from ..semaforo.service import SemaforoService
 from ..newCallCenter.service import NewCallCenterService
 from ..sharepoint.service import SharepointService
 from utils.logger_config import get_reporteCombinado_logger
-from ..sharepoint.scripts import horario_General_ATCORP, horario_Mesa_ATCORP
+from ..sharepoint.scripts import horario_general_atcorp, horario_mesa_atcorp
 from ..semaforo.scripts import semaforo_dataframe
 from ..newCallCenter.scripts import newCallCenter_dataframe
 
@@ -21,8 +21,8 @@ def generar_reporte_combinado(fecha_inicio, fecha_fin):
 
         semaforo_df = semaforo_dataframe.get_info_from_semaforo_downloaded_to_dataframe(fecha_inicio, fecha_fin)
         newcallCenter_clean_df = newCallCenter_dataframe.get_info_from_newcallcenter_download_to_dataframe(fecha_inicio, fecha_fin)
-        sharepoint_horario_General_ATCORP_df = horario_General_ATCORP.get_info_from_Exel_saved_to_dataframe()
-        sharepoint_horario_Mesa_ATCORP_df = horario_Mesa_ATCORP.get_info_from_Excel_Saved()
+        sharepoint_horario_General_ATCORP_df = horario_general_atcorp.get_info_from_Exel_saved_to_dataframe()
+        sharepoint_horario_Mesa_ATCORP_df = horario_mesa_atcorp.get_info_from_Excel_Saved()
 
         merged_df = pd.merge(
             semaforo_df,

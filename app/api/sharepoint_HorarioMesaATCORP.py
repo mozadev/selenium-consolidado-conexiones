@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi.responses import FileResponse
 from app.modules.web_bots.sharepoint.service import SharepointService
-from app.modules.web_bots.sharepoint.scripts.horario_Mesa_ATCORP import (
+from app.modules.web_bots.sharepoint.scripts.horario_mesa_atcorp import (
     save_from_Sync_Desktop_Excel
 )
 

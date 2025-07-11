@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime
 import os
 from utils.logger_config import get_reporteCombinado_logger
-from ..sharepoint.scripts import horario_General_ATCORP, horario_Mesa_ATCORP
+from ..sharepoint.scripts import horario_general_atcorp, horario_mesa_atcorp
 from ..semaforo.scripts import semaforo_dataframe
 from ..newCallCenter.scripts import newCallCenter_dataframe
 
@@ -15,8 +15,8 @@ def generar_reporte_combinado(fecha_inicio, fecha_fin):
 
         semaforo_df = semaforo_dataframe.get_info_from_semaforo_downloaded_to_dataframe(fecha_inicio, fecha_fin)
         newcallCenter_clean_df = newCallCenter_dataframe.get_info_from_newcallcenter_download_to_dataframe(fecha_inicio, fecha_fin)
-        sharepoint_horario_General_ATCORP_df = horario_General_ATCORP.get_info_from_Exel_saved_to_dataframe()
-        sharepoint_horario_Mesa_ATCORP_df = horario_Mesa_ATCORP.get_info_from_Excel_Saved()
+        sharepoint_horario_General_ATCORP_df = horario_general_atcorp.get_info_from_Exel_saved_to_dataframe()
+        sharepoint_horario_Mesa_ATCORP_df = horario_mesa_atcorp.get_info_from_Excel_Saved()
 
          # Verificar contenido de DataFrames antes del renombrado
         print("Contenido de sharepoint_horario_Mesa_ATCORP_df antes de renombrar:")
@@ -153,6 +153,83 @@ def generar_reporte_combinado(fecha_inicio, fecha_fin):
             # Cambiar el formato de FechaC
             final_combined_df['FechaC_formato'] = pd.to_datetime(final_combined_df['FechaC']).dt.strftime('%d/%m/%Y')
 
+
+        
+            valores_validos = [
+                "ASIGNADO A PROYECTO CIBERSEGURIDAD",
+                "DESCANSO",
+                "DESCANSO MEDICO",
+                "DESCANSO MÉDICO",
+                "DEVOLUCIÓN DE DIA",
+                "DEVOLUCIÓN DE DÍA",
+                "MESA GESTIONADOS",
+                "PIVOT",
+                "RENUNCIA",
+                "SOMBRA DE MIHAI - SOMBRA DE MIHAI - SOMBRA DE MIHAI",
+                "TURNO",
+                "TURNO DIA",
+                "TURNO NOCHE",
+                "VACACIONES"
+            ]
+
+            # Selección de columnas finales
+            columnas_finales = [
+                'UsuarioC',
+                'FechaC',
+                'FechaC_formato',
+                'UsuarioC_formato',
+                'Hora_Inicial_General',
+                'Hora_Inicial_Mesa',
+                'Hora_SEMAFORO',
+                'Hora_NCC'
+            ]
+
+            # Buscar nombres de columnas reales en el DataFrame combinado
+            columnas_existentes = []
+            for col in columnas_finales:
+                if col in final_combined_df.columns:
+                    columnas_existentes.append(col)
+                else:
+                    # Buscar columnas con sufijos (por ejemplo, 'Hora_Inicial_General_x')
+                    matches = [c for c in final_combined_df.columns if c.startswith(col)]
+                    if matches:
+                        columnas_existentes.append(matches[0])
+                    else:
+                        print(f"Columna no encontrada: {col}")
+
+            filtrado_df = final_combined_df[columnas_existentes].copy()
+
+            # 1. Excluir filas donde 'Hora_Inicial_General' esté en valores_validos (descansos y similares)
+            filtrado_df = filtrado_df[~filtrado_df['Hora_Inicial_General'].isin(valores_validos)]
+
+            # 2. (Opcional) Si quieres filtrar por filas donde al menos uno de los otros campos esté en valores_validos, descomenta:
+            # mask = (
+            #     filtrado_df['Hora_Inicial_Mesa'].isin(valores_validos) |
+            #     filtrado_df['Hora_SEMAFORO'].isin(valores_validos) |
+            #     filtrado_df['Hora_NCC'].isin(valores_validos)
+            # )
+            # filtrado_df = filtrado_df[mask]
+
+            # 3. Dejar solo las columnas finales
+            filtrado_df = filtrado_df[columnas_finales]
+
+            # Llenar NaN en columnas de hora y texto
+            columnas_hora = ['Hora_Inicial_General', 'Hora_Inicial_Mesa', 'Hora_SEMAFORO', 'Hora_NCC']
+            columnas_texto = ['UsuarioC', 'UsuarioC_formato']
+            columnas_hora_existentes = [col for col in columnas_hora if col in filtrado_df.columns]
+            columnas_texto_existentes = [col for col in columnas_texto if col in filtrado_df.columns]
+            filtrado_df[columnas_hora_existentes] = filtrado_df[columnas_hora_existentes].fillna('00:00:00')
+            filtrado_df[columnas_texto_existentes] = filtrado_df[columnas_texto_existentes].fillna('')
+
+            # Guardar el DataFrame filtrado
+            filtrado_path = os.path.join('media/reportes_combinados/', f'filtrado_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx') 
+            filtrado_df.to_excel(filtrado_path, index=False, engine='openpyxl')
+            print(f"Reporte filtrado guardado en: {filtrado_path}")
+            # --- FIN FILTRADO PERSONALIZADO ---
+
+
+
+
         except KeyError as e:
             print(f"Error: {e}")
 
@@ -188,7 +265,6 @@ def save_info_obtained(df_sharepointATCORPGeneral_ncc_semaforo_SharepointMesaATC
     df_sharepointATCORPGeneral_ncc_semaforo_SharepointMesaATCORP_ruta = os.path.join(output_dir, f'df_sharepointATCORPGeneral_ncc_semaforo_SharepointMesaATCORP{timestamp}.xlsx')
     df_sharepointATCORPGeneral_ncc_semaforo_SharepointMesaATCORP.to_excel(df_sharepointATCORPGeneral_ncc_semaforo_SharepointMesaATCORP_ruta, index=False, engine='openpyxl')
     logger.info(f"Reporte Combinado guardado en: {df_sharepointATCORPGeneral_ncc_semaforo_SharepointMesaATCORP_ruta}")
-
 
     return df_sharepointATCORPGeneral_ncc_semaforo_SharepointMesaATCORP_ruta
 
